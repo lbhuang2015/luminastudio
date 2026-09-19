@@ -1,0 +1,488 @@
+<title>Lumina 2048 Support</title>
+<style>
+  :root {
+    --bg: #f5f8fc;
+    --surface: #ffffff;
+    --surface-tint: #edf3fb;
+    --text: #1b2436;
+    --muted: #5b6577;
+    --border: #dde4f0;
+    --accent: #1f6fd6;
+    --accent-2: #16b3c2;
+    --accent-3: #8b6cf2;
+    --accent-soft: #e7f0fd;
+
+    --font-display: 'Unbounded', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    --font-body: 'Literata', Georgia, 'Times New Roman', serif;
+    --font-mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace;
+
+    --measure: 42rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0a0d15;
+      --surface: #121826;
+      --surface-tint: #16202f;
+      --text: #e7ecf6;
+      --muted: #93a0b8;
+      --border: #232d40;
+      --accent: #74b6ff;
+      --accent-2: #35d6e3;
+      --accent-3: #b6a2ff;
+      --accent-soft: #182333;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #0a0d15;
+    --surface: #121826;
+    --surface-tint: #16202f;
+    --text: #e7ecf6;
+    --muted: #93a0b8;
+    --border: #232d40;
+    --accent: #74b6ff;
+    --accent-2: #35d6e3;
+    --accent-3: #b6a2ff;
+    --accent-soft: #182333;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 17px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: var(--accent); text-underline-offset: 0.15em; text-decoration-color: color-mix(in srgb, var(--accent) 45%, transparent); }
+  a:hover { text-decoration-color: var(--accent); }
+
+  .spectrum-bar {
+    height: 3px;
+    width: 100%;
+    background: linear-gradient(90deg, var(--accent-2), var(--accent), var(--accent-3));
+  }
+
+  .page {
+    max-width: var(--measure);
+    margin: 0 auto;
+    padding: 3rem 1.25rem 5rem;
+  }
+
+  header.doc-header {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.1rem;
+    padding-bottom: 2.25rem;
+    margin-bottom: 2.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .gem {
+    width: 46px;
+    height: 46px;
+    flex-shrink: 0;
+  }
+
+  .eyebrow {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 0.72rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(1.9rem, 4.5vw, 2.6rem);
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    margin: 0.15rem 0 0;
+    text-wrap: balance;
+  }
+
+  .dek {
+    font-size: 1.05rem;
+    color: var(--muted);
+    max-width: 38rem;
+    margin: 0;
+  }
+
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
+  }
+
+  .chip {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    letter-spacing: 0.01em;
+    color: var(--muted);
+    background: var(--surface-tint);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0.32rem 0.8rem;
+    white-space: nowrap;
+  }
+
+  .chip a { color: inherit; text-decoration: none; }
+  .chip a:hover { text-decoration: underline; }
+
+  nav.toc {
+    background: var(--surface-tint);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.4rem 1.5rem;
+    margin-bottom: 3rem;
+  }
+
+  nav.toc h2 {
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 0.9rem;
+  }
+
+  nav.toc ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.55rem;
+  }
+
+  nav.toc li {
+    display: flex;
+    align-items: baseline;
+    gap: 0.65rem;
+  }
+
+  nav.toc .num {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 0.82rem;
+    color: var(--accent);
+    width: 1.4rem;
+    flex-shrink: 0;
+  }
+
+  nav.toc a {
+    font-family: var(--font-body);
+    font-weight: 500;
+    font-size: 0.98rem;
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  nav.toc a:hover { color: var(--accent); }
+
+  section.policy-section {
+    margin-bottom: 3rem;
+    scroll-margin-top: 1.5rem;
+  }
+
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.85rem;
+    margin-bottom: 1.1rem;
+  }
+
+  .section-num {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 0.85rem;
+    color: var(--accent);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.1rem 0.4rem;
+  }
+
+  h2 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 1.32rem;
+    letter-spacing: -0.005em;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .section-body > p:first-child { margin-top: 0; }
+
+  p { margin: 0 0 1rem; }
+
+  ul.plain {
+    margin: 0 0 1rem;
+    padding-left: 1.15rem;
+  }
+  ul.plain li { margin-bottom: 0.5rem; }
+  ul.plain li:last-child { margin-bottom: 0; }
+
+  .data-item {
+    border-left: 2px solid var(--accent-soft);
+    padding-left: 1.1rem;
+    margin-bottom: 1.4rem;
+  }
+  .data-item:last-child { margin-bottom: 0; }
+
+  .data-item h3 {
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 1.02rem;
+    margin: 0 0 0.4rem;
+  }
+
+  .data-item p { margin-bottom: 0; color: var(--text); }
+
+  .callout {
+    background: var(--surface-tint);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.1rem 1.3rem;
+    margin: 1.1rem 0;
+  }
+  .callout p { margin: 0 0 0.6rem; }
+  .callout p:last-child { margin-bottom: 0; }
+  .callout strong { color: var(--accent); }
+
+  .contact-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.6rem 1.7rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .contact-card .label {
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.35rem;
+  }
+
+  .contact-card .email {
+    font-family: var(--font-mono);
+    font-size: 1.05rem;
+  }
+
+  .contact-card .btn {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--bg);
+    background: var(--accent);
+    border-radius: 999px;
+    padding: 0.6rem 1.2rem;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  footer.doc-footer {
+    margin-top: 4rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.75rem;
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+
+  footer.doc-footer a { color: var(--muted); }
+
+  @media (max-width: 480px) {
+    .page { padding-top: 2rem; }
+    header.doc-header { gap: 0.9rem; }
+    .contact-card { flex-direction: column; align-items: flex-start; }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    header.doc-header, nav.toc, section.policy-section {
+      animation: rise 0.5s ease-out both;
+    }
+    nav.toc { animation-delay: 0.05s; }
+    section.policy-section:nth-of-type(1) { animation-delay: 0.08s; }
+  }
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media print {
+    .spectrum-bar, nav.toc { display: none; }
+    a { color: inherit; text-decoration: underline; }
+    .callout, .contact-card, .data-item { border-color: #999; }
+  }
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:wght@400;500;600;700&family=Unbounded:wght@500;600;700&display=swap">
+
+<div class="spectrum-bar"></div>
+
+<div class="page">
+
+  <header class="doc-header">
+    <svg class="gem" viewBox="0 0 64 64" aria-hidden="true">
+      <polygon points="32,4 8,26 32,34" fill="var(--accent-2)" opacity="0.92" />
+      <polygon points="32,4 56,26 32,34" fill="var(--accent)" opacity="0.95" />
+      <polygon points="8,26 32,60 32,34" fill="var(--accent)" opacity="0.55" />
+      <polygon points="56,26 32,60 32,34" fill="var(--accent-3)" opacity="0.75" />
+      <polygon points="32,4 8,26 56,26" fill="none" stroke="var(--text)" stroke-opacity="0.18" stroke-width="1" />
+      <polygon points="8,26 32,60 56,26" fill="none" stroke="var(--text)" stroke-opacity="0.18" stroke-width="1" />
+    </svg>
+    <div class="eyebrow">Support</div>
+    <h1>Lumina 2048</h1>
+    <p class="dek">Answers to common questions about playing Lumina 2048, plus how to reach us if something&rsquo;s not working.</p>
+    <div class="meta-row">
+      <span class="chip">Free &middot; No in-app purchases</span>
+      <span class="chip"><a href="mailto:eric.huang6088@gmail.com">eric.huang6088@gmail.com</a></span>
+      <span class="chip"><a href="index.html">Privacy Policy</a></span>
+    </div>
+  </header>
+
+  <p>Lumina 2048 is a glass-and-neon take on the classic sliding-tile puzzle, with three board sizes and Game Center leaderboards. This page covers the most common questions; if you don&rsquo;t find your answer below, email us directly and we&rsquo;ll get back to you.</p>
+
+  <nav class="toc" aria-label="Table of contents">
+    <h2>On this page</h2>
+    <ol>
+      <li><span class="num">01</span><a href="#basics">Gameplay Basics</a></li>
+      <li><span class="num">02</span><a href="#saveload">Save &amp; Load</a></li>
+      <li><span class="num">03</span><a href="#leaderboard">Game Center &amp; Leaderboards</a></li>
+      <li><span class="num">04</span><a href="#ads">Ads &amp; Privacy Choices</a></li>
+      <li><span class="num">05</span><a href="#troubleshooting">Troubleshooting</a></li>
+      <li><span class="num">06</span><a href="#contact">Contact Us</a></li>
+    </ol>
+  </nav>
+
+  <section class="policy-section" id="basics">
+    <div class="section-head">
+      <span class="section-num">01</span>
+      <h2>Gameplay Basics</h2>
+    </div>
+    <div class="section-body">
+      <div class="data-item">
+        <h3>How do I play?</h3>
+        <p>Swipe up, down, left, or right to slide every tile on the board at once. Tiles with the same number merge into one when they collide, and your score goes up with every merge.</p>
+      </div>
+      <div class="data-item">
+        <h3>How do I change the board size?</h3>
+        <p>Tap the gear icon in the bottom control bar to open Settings, then choose 3&times;3, 4&times;4, or 5&times;5. Changing the board size starts a new game &mdash; each size keeps its own save file and its own best score.</p>
+      </div>
+      <div class="data-item">
+        <h3>How do I restart or mute the game?</h3>
+        <p>The bottom control bar has a Reset icon (starts a new game on your current board size) and a Mute icon (toggles sound effects on/off).</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="policy-section" id="saveload">
+    <div class="section-head">
+      <span class="section-num">02</span>
+      <h2>Save &amp; Load</h2>
+    </div>
+    <div class="section-body">
+      <p>Save and Load are optional convenience features, unlocked by watching a short rewarded video ad.</p>
+      <div class="callout">
+        <p><strong>Why does it ask me to watch a video?</strong> Tapping Save or Load shows a confirmation card first. If you confirm and watch the video to completion, the save or load goes through. You can cancel any time, and you&rsquo;re never required to watch an ad just to keep playing.</p>
+        <p><strong>What if I&rsquo;m offline?</strong> If your device has no internet connection, the App skips the ad entirely and performs the save or load locally, for free.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="policy-section" id="leaderboard">
+    <div class="section-head">
+      <span class="section-num">03</span>
+      <h2>Game Center &amp; Leaderboards</h2>
+    </div>
+    <div class="section-body">
+      <div class="data-item">
+        <h3>The leaderboard says &ldquo;Sign in to Game Center&rdquo;</h3>
+        <p>Open the iOS Settings app &rarr; Game Center, and sign in with your Apple ID. Once signed in, reopen the leaderboard in Lumina 2048 (tap the trophy icon in the score panel).</p>
+      </div>
+      <div class="data-item">
+        <h3>Why are there three separate leaderboards?</h3>
+        <p>Each board size (3&times;3, 4&times;4, 5&times;5) has its own leaderboard, so scores are only ever compared against other players using the same board size.</p>
+      </div>
+      <div class="data-item">
+        <h3>The leaderboard won&rsquo;t load / shows an error</h3>
+        <p>This is usually a temporary network or Game Center service issue &mdash; check your connection and try again in a moment. If it keeps happening, email us with your device model and iOS version.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="policy-section" id="ads">
+    <div class="section-head">
+      <span class="section-num">04</span>
+      <h2>Ads &amp; Privacy Choices</h2>
+    </div>
+    <div class="section-body">
+      <p>Lumina 2048 is completely free with no in-app purchases, supported by a bottom banner ad and the optional rewarded video described above.</p>
+      <ul class="plain">
+        <li>To limit ad tracking, go to iOS Settings &rarr; Privacy &amp; Security &rarr; Tracking, and turn off tracking for Lumina 2048</li>
+        <li>Where required (EEA, UK, Switzerland), you can revisit your advertising consent choice anytime via the &ldquo;Privacy Options&rdquo; button at the bottom of the main screen</li>
+      </ul>
+      <p>Full details are in our <a href="index.html">Privacy Policy</a>.</p>
+    </div>
+  </section>
+
+  <section class="policy-section" id="troubleshooting">
+    <div class="section-head">
+      <span class="section-num">05</span>
+      <h2>Troubleshooting</h2>
+    </div>
+    <div class="section-body">
+      <div class="data-item">
+        <h3>The game feels stuck or a swipe didn&rsquo;t register</h3>
+        <p>Make sure your swipe is a clear, single-direction motion across the board. If the app becomes unresponsive, close it from the App Switcher and relaunch &mdash; your last save is unaffected.</p>
+      </div>
+      <div class="data-item">
+        <h3>I lost my progress</h3>
+        <p>Game state is saved locally on your device only; it is not backed up to any server. Uninstalling the App, or using Load without ever having used Save on that board size, will not restore progress from another device.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="policy-section" id="contact">
+    <div class="section-head">
+      <span class="section-num">06</span>
+      <h2>Contact Us</h2>
+    </div>
+    <div class="section-body">
+      <p>Still stuck, or found a bug? Email us &mdash; please include your device model, iOS version, and what you were doing when the issue happened.</p>
+      <div class="contact-card">
+        <div>
+          <div class="label">Email</div>
+          <div class="email">eric.huang6088@gmail.com</div>
+        </div>
+        <a class="btn" href="mailto:eric.huang6088@gmail.com">Send an email</a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="doc-footer">
+    <span>Lumina 2048 &mdash; published by LINBO HUANG, an independent developer.</span>
+    <a href="#top">Back to top</a>
+  </footer>
+
+</div>
